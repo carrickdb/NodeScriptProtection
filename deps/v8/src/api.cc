@@ -7,7 +7,6 @@
 // FOR NODE PROJ***
 #include <iostream>
 #include <cstring>
-#include <fstream>
 
 //**************
 
@@ -2396,42 +2395,37 @@ std::string sha256(std::string input)
 
 
 // HASH CHECK
-std::unordered_set<std::string> whitelist;
-
-void getHashes(std::string hash_file) {
-  std::ifstream infile(hash_file);
-  std::string line;
-  while (std::getline(infile, line)) {
-    whitelist.insert(line);
-    //std::cout << line << std::endl;
-  }  
-}
-
 MaybeLocal<UnboundScript> ScriptCompiler::CompileUnboundInternal(
     Isolate* v8_isolate, Source* source, CompileOptions options) {
-
-  bool hash_found = true;
-  getHashes("/Users/carrickdb/Dropbox/node_proj/test/src_hashes");
-  std::string hash = sha256(*String::Utf8Value(source->source_string));
-//  std::cout << hash << std::endl;
-  std::unordered_set<std::string>::const_iterator in_hashes = whitelist.find(hash);
-  if (in_hashes == whitelist.end()) {
-    std::cout << "Hash not found: ";
-    std::cout << *String::Utf8Value(source->resource_name);
-    std::cout << " " << hash << std::endl;
-//    std::cout << *String::Utf8Value(source->source_string);
-    hash_found = false;
-    exit(0);
-  }
 
   auto isolate = reinterpret_cast<i::Isolate*>(v8_isolate);
   TRACE_EVENT_CALL_STATS_SCOPED(isolate, "v8", "V8.ScriptCompiler");
   ENTER_V8_NO_SCRIPT(isolate, v8_isolate->GetCurrentContext(), ScriptCompiler,
                      CompileUnbound, MaybeLocal<UnboundScript>(),
                      InternalEscapableScope);
-  if (!hash_found) {
-    has_pending_exception = true;
-    RETURN_ON_FAILED_EXECUTION(UnboundScript);
+  
+  if (v8_isolate->GetData(1) != NULL) {
+    std::unordered_set<std::string>* hash_pointer = static_cast<std::unordered_set<std::string>*> (v8_isolate->GetData(1));
+    printf("w00t\n");
+    std::unordered_set<std::string> whitelist = *hash_pointer;
+    bool hash_found = true;
+    std::string hash = sha256(*String::Utf8Value(source->source_string));
+    std::cout << hash << std::endl;
+    std::unordered_set<std::string>::const_iterator in_hashes = whitelist.find(hash);
+    if (in_hashes == whitelist.end()) {
+      std::cout << "Hash not found: ";
+      std::cout << *String::Utf8Value(source->resource_name);
+      std::cout << " " << hash << std::endl;
+      //std::cout << *String::Utf8Value(source->source_string);
+      hash_found = false;
+    } else {
+      std::cout << "Hash found: ";
+      std::cout << " " << hash << std::endl;   
+    }
+    if (!hash_found) {
+      has_pending_exception = true;
+      RETURN_ON_FAILED_EXECUTION(UnboundScript);
+    }
   }
 
   // Don't try to produce any kind of cache when the debugger is loaded.
