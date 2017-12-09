@@ -186,7 +186,7 @@ void PromiseReject(const FunctionCallbackInfo<Value>& args) {
   args.GetReturnValue().Set(ret.FromMaybe(false));
 }
 
-// Initiailizes data structure with all the hashes for CompileUnboundInternal to use.
+// Initiailizes data structure with all the file hashes.
 void EnableHashing(const FunctionCallbackInfo<Value>& args) {
   v8::Isolate* isolate = args.GetIsolate();
   if (args[0]->IsNullOrUndefined() || !args[0]->IsString()) return;
