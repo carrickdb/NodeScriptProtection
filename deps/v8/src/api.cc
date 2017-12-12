@@ -95,7 +95,7 @@ namespace v8 {
  * scheduled in addition (respectively). Creating a pending exception and
  * removing it before returning is ok.
  *
- * Exceptions should be handled either by invoking one of the
+ * Exceptions should be handled by invoking one of the
  * RETURN_ON_FAILED_EXECUTION* macros.
  *
  * Don't use macros with DO_NOT_USE in their name.
@@ -2406,25 +2406,22 @@ MaybeLocal<UnboundScript> ScriptCompiler::CompileUnboundInternal(
   
   if (v8_isolate->GetData(1) != NULL) {
     std::unordered_set<std::string>* hash_pointer = static_cast<std::unordered_set<std::string>*> (v8_isolate->GetData(1));
-    printf("w00t\n");
     std::unordered_set<std::string> whitelist = *hash_pointer;
-    bool hash_found = true;
     std::string hash = sha256(*String::Utf8Value(source->source_string));
-    std::cout << hash << std::endl;
     std::unordered_set<std::string>::const_iterator in_hashes = whitelist.find(hash);
     if (in_hashes == whitelist.end()) {
       std::cout << "Hash not found: ";
       std::cout << *String::Utf8Value(source->resource_name);
       std::cout << " " << hash << std::endl;
       //std::cout << *String::Utf8Value(source->source_string);
-      hash_found = false;
+      exit(0);
+//      has_pending_exception = true;
+//      isolate->set_pending_exception();
+//      RETURN_ON_FAILED_EXECUTION(UnboundScript);
     } else {
+      std::cout << *String::Utf8Value(source->resource_name) << std::endl;
       std::cout << "Hash found: ";
       std::cout << " " << hash << std::endl;   
-    }
-    if (!hash_found) {
-      has_pending_exception = true;
-      RETURN_ON_FAILED_EXECUTION(UnboundScript);
     }
   }
 
@@ -2539,7 +2536,6 @@ Local<Script> ScriptCompiler::Compile(
     Isolate* v8_isolate,
     Source* source,
     CompileOptions options) {
-  printf("ScriptCompiler::Compile 2327");
   auto context = v8_isolate->GetCurrentContext();
   RETURN_TO_LOCAL_UNCHECKED(Compile(context, source, options), Script);
 }
